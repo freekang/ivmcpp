@@ -270,22 +270,13 @@ void ivm_learn(const arma::mat& phi, const arma::icolvec& c, const ivm_params_t&
 		// compute z from actual alpha
 		for(int k=1;k<=C;++k)
 		{
-			//arma::sp_mat wk = W(k-1,0);
-			//arma::sp_mat::iterator spita=wk.begin();
-			//arma::sp_mat::iterator spitb=wk.end();
-			//for(arma::sp_mat::iterator it=spita; it!=spitb; ++it)
-			//{
-				//*it=1.0/(*it);
-			//}
-			//wk.print("wk");
-			//arma::mat tt = wk * arma::trans(t.row(k-1) - y.row(k-1));
-			//tt.print("tt");
-			//arma::mat ttt = KS * alpha.col(k-1);
-			//ttt.print("ttt");
-			arma::mat wk_1 = arma::conv_to<arma::mat>::from(W(k-1,0));
+			//arma::mat wk_1 = arma::conv_to<arma::mat>::from(W(k-1,0));
 			//W(k-1,0).print("W(k-1,0)");
 			//wk_1.print("wk_1");
-			z.col(k-1) = (KS * alpha.col(k-1) + arma::inv(wk_1) * arma::trans(t.row(k-1) - y.row(k-1))) / N;
+//			z.col(k-1) = (KS * alpha.col(k-1) + arma::inv(wk_1) * arma::trans(t.row(k-1) - y.row(k-1))) / N;
+			arma::mat tmpB = arma::trans(t.row(k-1) - y.row(k-1));
+			arma::vec tmpX = arma::spsolve(W(k-1,0), tmpB);
+			z.col(k-1) = (KS * alpha.col(k-1) + tmpX ) / N;
 			//z.col(k-1).print("z");
 		}
 		arma::uvec allIV = arma::regspace<arma::uvec>(1, 1, N);
@@ -398,11 +389,17 @@ void ivm_learn(const arma::mat& phi, const arma::icolvec& c, const ivm_params_t&
 				{
 					//% inverse Hessian         
 					//invHess{k} = (1 / N * KS' * W{k} * KS + lambda * Kreg)^-1;
-					invHess(0, k-1) = arma::inv((1.0 / N * arma::trans(KS) * W(k-1, 0) * KS + lambda * Kreg));
+					
+					//invHess(0, k-1) = arma::inv((1.0 / N * arma::trans(KS) * W(k-1, 0) * KS + lambda * Kreg));
+					arma::mat tmpA = (1.0 / N * arma::trans(KS) * W(k-1, 0) * KS + lambda * Kreg);
+					arma::mat tmpB = arma::trans(KS) * W(k-1, 0) * z.col(k-1);
+					arma::vec tmpX = arma::solve(tmpA, tmpB);
 
 					//% new parameter
 					//alpha_new(:, k) = invHess{k} * KS' * W{k} * z(:, k);
-					alpha_new.col(k-1) = invHess(0, k-1) * arma::trans(KS) * W(k-1, 0) * z.col(k-1);
+					
+					//alpha_new.col(k-1) = invHess(0, k-1) * arma::trans(KS) * W(k-1, 0) * z.col(k-1);
+					alpha_new.col(k-1) = tmpX;
 					
 					//KS.print("KS");
 					//W(k-1, 0).print(" W(k-1, 0)");
