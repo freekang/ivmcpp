@@ -450,6 +450,7 @@ void ivm_learn(const arma::mat& phi, const arma::icolvec& c, const ivm_params_t&
 			if(!points.empty())
 			{
 				//S(end) = [];
+				S.resize(S.n_elem-1);
 				
 				// kernel matrices from subset S
 				KS   = KS_store;
@@ -478,14 +479,14 @@ void ivm_learn(const arma::mat& phi, const arma::icolvec& c, const ivm_params_t&
 			if(!(rat < *params.epsilon))
 			{
 				printf("forward: %3d: %d->%.2f %%, rat:%.4f,L:%f, #IV: %d\n",
-					Q, err_train, 1.0*err_train / N, rat, fval, S.n_elem);
+					Q, err_train, 100.0*err_train / N, rat, fval, S.n_elem);
 			}
 			else
 			{
-				rat = abs(fval_last - lastL) / abs(fval_last);
+				rat = std::abs(fval_last - lastL) / std::abs(fval_last);
 				fval = fval_last;
-				printf("forward: %3d: %d->%.2f %%, rat:%.4f,L:%f, #IV: %s\n",
-					Q, err_train, 1.0*err_train / N, rat, fval_last, S.n_elem);
+				printf("forward: %3d: %d->%.2f %%, rat:%.4f,L:%f, #IV: %d\n",
+					Q, err_train, 100.0*err_train / N, rat, fval_last, S.n_elem);
 			}
 		}
 		
